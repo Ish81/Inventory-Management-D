@@ -9,7 +9,7 @@ services:
     environment:
       POSTGRES_DB: inventory_management_db
       POSTGRES_USER: inventory_user
-      POSTGRES_PASSWORD: 1234
+      POSTGRES_PASSWORD: inventory_pass_2024
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
@@ -33,7 +33,7 @@ services:
       FLASK_ENV: production
       FLASK_DEBUG: 0
       SECRET_KEY: super-secret-production-key-change-this
-      DATABASE_URL: postgresql://inventory_user:1234@db:5432/inventory_management_db
+      DATABASE_URL: postgresql://inventory_user:inventory_pass_2024@db:5432/inventory_management_db
       FRONTEND_URL: http://localhost:3000
     networks:
       - inventory_network

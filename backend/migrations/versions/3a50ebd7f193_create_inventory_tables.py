@@ -1,8 +1,8 @@
-"""create categories, suppliers, products tables
+"""create inventory tables
 
-Revision ID: 7e5643b0824f
+Revision ID: 3a50ebd7f193
 Revises: 
-Create Date: 2026-06-05 23:01:15.363862
+Create Date: 2026-06-07 12:55:03.549064
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = '7e5643b0824f'
+revision = '3a50ebd7f193'
 down_revision = None
 branch_labels = None
 depends_on = None
