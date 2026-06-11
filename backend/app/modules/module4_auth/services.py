@@ -19,6 +19,14 @@ def generate_token(user_id, email, role):
         'exp': datetime.now(timezone.utc) + timedelta(hours=24)
     }
     secret = os.environ.get('JWT_SECRET')
+    # #region agent log
+    import json, time
+    try:
+        with open(os.path.join(os.path.dirname(__file__), '..', '..', '..', '..', 'debug-99ff6c.log'), 'a', encoding='utf-8') as f:
+            f.write(json.dumps({'sessionId': '99ff6c', 'hypothesisId': 'C', 'location': 'services.py:generate_token', 'message': 'JWT secret check', 'data': {'jwt_secret_set': bool(secret), 'secret_key_set': bool(os.environ.get('SECRET_KEY'))}, 'timestamp': int(time.time() * 1000)}) + '\n')
+    except Exception:
+        pass
+    # #endregion
     if not secret:
         raise ValueError("JWT_SECRET is not set in environment variables.")
     return jwt.encode(payload, secret, algorithm='HS256')

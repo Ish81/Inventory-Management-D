@@ -23,6 +23,9 @@ const Login = () => {
 
     try {
       const response = await authApi.loginUser(email, password);
+      // #region agent log
+      fetch('http://127.0.0.1:7554/ingest/4f94b0ee-8c6b-4772-8deb-697210683d48',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'99ff6c'},body:JSON.stringify({sessionId:'99ff6c',hypothesisId:'A',location:'Login.jsx:handleLogin',message:'login response',data:{status:response.status,hasData:!!response.data,hasNestedData:!!response.data?.data,message:response.data?.message},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       // Depending on axios response structure (usually wrapped in response.data)
       const { token, user } = response.data.data ? response.data.data : response.data;
       
@@ -34,6 +37,9 @@ const Login = () => {
       // Redirect to dashboard (assuming '/' is the dashboard)
       navigate('/');
     } catch (err) {
+      // #region agent log
+      fetch('http://127.0.0.1:7554/ingest/4f94b0ee-8c6b-4772-8deb-697210683d48',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'99ff6c'},body:JSON.stringify({sessionId:'99ff6c',hypothesisId:'A',location:'Login.jsx:handleLogin',message:'login error',data:{status:err.response?.status,message:err.response?.data?.message,url:err.config?.url},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       setError(err.response?.data?.message || 'Login failed. Please try again.');
     } finally {
       setIsLoading(false);
