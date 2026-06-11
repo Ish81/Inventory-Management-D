@@ -5,6 +5,7 @@ import { analyticsApi } from '../../api/analyticsApi';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
 import EmptyState from '../../components/common/EmptyState';
 import { formatCurrency } from '../../utils/formatters';
+import toast from 'react-hot-toast';
 
 const StatCard = ({ label, value, color = '#111827', bg = '#fff' }) => (
   <div style={{
@@ -25,38 +26,70 @@ const StatCard = ({ label, value, color = '#111827', bg = '#fff' }) => (
 const ReportsPage = () => {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await analyticsApi.getAnalytics();
-        setData(response.data.data ? response.data.data : response.data);
+        
+        // Handle flexible response structure
+        let analyticsData;
+        if (response.data?.data) {
+          analyticsData = response.data.data;
+        } else if (response.data) {
+          analyticsData = response.data;
+        } else {
+          throw new Error('Invalid response structure');
+        }
+
+        // Validate that we have required fields
+        if (!analyticsData) {
+          throw new Error('No analytics data received');
+        }
+
+        setData(analyticsData);
+        setError(null);
       } catch (err) {
-        setError(true);
+        console.error('Failed to fetch analytics:', err);
+        const errorMsg = err.response?.data?.message || err.message || 'Failed to load analytics';
+        setError(errorMsg);
+        toast.error(errorMsg);
+        setData(null);
       } finally {
         setLoading(false);
       }
     };
+    
     fetchData();
   }, []);
 
   const handleExportCSV = () => {
-    if (!data || !data.monthly_orders) return;
-    const header = "Month,Order Count\n";
-    const rows = data.monthly_orders.map(row => `${row.month},${row.count}`).join("\n");
-    const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(header + rows);
-    const link = document.createElement("a");
-    link.setAttribute("href", csvContent);
+    if (!data || !data.monthly_orders || data.monthly_orders.length === 0) {
+      toast.error('No data to export');
+      return;
+    }
     
-    const now = new Date();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const year = now.getFullYear();
-    link.setAttribute("download", `inventory-report-${month}-${year}.csv`);
-    
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    try {
+      const header = "Month,Order Count\n";
+      const rows = data.monthly_orders.map(row => `${row.month || 'N/A'},${row.count || 0}`).join("\n");
+      const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(header + rows);
+      const link = document.createElement("a");
+      link.setAttribute("href", csvContent);
+      
+      const now = new Date();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const year = now.getFullYear();
+      link.setAttribute("download", `inventory-report-${month}-${year}.csv`);
+      
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      toast.success('Report exported successfully');
+    } catch (err) {
+      console.error('Export failed:', err);
+      toast.error('Failed to export report');
+    }
   };
 
   if (loading) {
@@ -72,17 +105,17 @@ const ReportsPage = () => {
     return (
       <MainLayout>
         <PageHeader title="Reports" subtitle="Inventory analytics and summaries" />
-        <EmptyState message="Failed to load analytics data" />
+        <EmptyState message={error || "Failed to load analytics data"} />
       </MainLayout>
     );
   }
 
-  const monthlyOrders = data.monthly_orders || [];
+  const monthlyOrders = (data.monthly_orders || []).filter(o => o && o.count !== undefined);
   const maxOrderCount = monthlyOrders.length > 0 
-    ? Math.max(...monthlyOrders.map(o => o.count), 1) 
+    ? Math.max(...monthlyOrders.map(o => o.count || 0), 1) 
     : 1;
 
-  const totalOrders = monthlyOrders.reduce((sum, item) => sum + item.count, 0);
+  const totalOrders = monthlyOrders.reduce((sum, item) => sum + (item.count || 0), 0);
 
   return (
     <MainLayout>
@@ -92,70 +125,76 @@ const ReportsPage = () => {
       />
 
       <div style={{ display: 'flex', gap: '16px', marginBottom: '32px', flexWrap: 'wrap' }}>
-        <StatCard label="Total Products" value={data.total_products} color="#2563eb" />
-        <StatCard label="Low Stock Count" value={data.low_stock_count} color="#d97706" />
-        <StatCard label="Inventory Valuation" value={formatCurrency(data.inventory_valuation)} />
-        <StatCard label="Total Orders (6 Mo)" value={totalOrders} color="#059669" />
+        <StatCard label="Total Products" value={data.total_products || 0} color="#2563eb" />
+        <StatCard label="Total Categories" value={data.total_categories || 0} color="#7c3aed" />
+        <StatCard label="Total Suppliers" value={data.total_suppliers || 0} color="#059669" />
+        <StatCard label="Low Stock Items" value={data.low_stock_count || 0} color="#dc2626" bg="#fee2e2" />
       </div>
 
-      <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '24px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
-          <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#111827' }}>Monthly Orders Trend</h3>
-          <button 
+      {/* Orders Chart */}
+      <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '24px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#111827' }}>Orders per Month</h3>
+          <button
             onClick={handleExportCSV}
             style={{
-              padding: '6px 12px',
+              padding: '8px 16px',
+              background: '#2563eb',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '6px',
               fontSize: '13px',
               fontWeight: '500',
-              borderRadius: '6px',
-              border: '1px solid #d1d5db',
-              background: '#fff',
-              color: '#374151',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
+              cursor: 'pointer'
             }}
           >
-            ↓ Export CSV
+            Export CSV
           </button>
         </div>
 
         {monthlyOrders.length === 0 ? (
-          <p style={{ color: '#9ca3af', fontSize: '13px', textAlign: 'center' }}>No order data available.</p>
+          <div style={{ textAlign: 'center', padding: '40px 20px', color: '#6b7280' }}>
+            No monthly data available
+          </div>
         ) : (
-          <div style={{ position: 'relative', height: '220px', width: '100%' }}>
-            <svg viewBox={`0 0 ${monthlyOrders.length * 100} 100`} preserveAspectRatio="none" style={{ width: '100%', height: 'calc(100% - 30px)', overflow: 'visible' }}>
-              <polyline 
-                points={monthlyOrders.map((item, idx) => {
-                  const x = (idx * 100) + 50;
-                  const y = 100 - ((item.count / maxOrderCount) * 90); // 90 to leave padding top
-                  return `${x},${y}`;
-                }).join(' ')}
-                fill="none" 
-                stroke="#2563eb" 
-                strokeWidth="3" 
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-              {monthlyOrders.map((item, idx) => {
-                const x = (idx * 100) + 50;
-                const y = 100 - ((item.count / maxOrderCount) * 90);
-                return (
-                  <g key={idx}>
-                    <circle cx={x} cy={y} r="5" fill="#fff" stroke="#2563eb" strokeWidth="2" />
-                    <text x={x} y={y - 15} fontSize="14" fill="#6b7280" textAnchor="middle">{item.count}</text>
-                  </g>
-                );
-              })}
-            </svg>
-            <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '10px' }}>
-              {monthlyOrders.map((item, idx) => (
-                <span key={idx} style={{ fontSize: '11px', color: '#6b7280', flex: 1, textAlign: 'center' }}>{item.month}</span>
-              ))}
-            </div>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '8px', height: '200px' }}>
+            {monthlyOrders.map((item) => (
+              <div key={item.month} style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                <div
+                  style={{
+                    width: '100%',
+                    background: '#2563eb',
+                    borderRadius: '4px 4px 0 0',
+                    height: `${(item.count / maxOrderCount) * 100}%`,
+                    minHeight: item.count > 0 ? '20px' : '0px',
+                    transition: 'all 0.2s',
+                  }}
+                  title={`${item.month}: ${item.count} orders`}
+                />
+                <div style={{ marginTop: '8px', fontSize: '11px', color: '#6b7280', textAlign: 'center', width: '100%' }}>
+                  {item.month}
+                </div>
+              </div>
+            ))}
           </div>
         )}
+      </div>
+
+      {/* Summary Cards */}
+      <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '24px' }}>
+        <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#111827', marginBottom: '16px' }}>Summary</h3>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
+          <div>
+            <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Total Orders (This Period)</p>
+            <p style={{ fontSize: '24px', fontWeight: '700', color: '#111827' }}>{totalOrders}</p>
+          </div>
+          <div>
+            <p style={{ fontSize: '12px', color: '#6b7280', marginBottom: '4px' }}>Average Orders per Month</p>
+            <p style={{ fontSize: '24px', fontWeight: '700', color: '#111827' }}>
+              {monthlyOrders.length > 0 ? (totalOrders / monthlyOrders.length).toFixed(1) : 0}
+            </p>
+          </div>
+        </div>
       </div>
     </MainLayout>
   );

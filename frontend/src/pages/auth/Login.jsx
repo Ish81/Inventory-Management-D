@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authApi } from '../../api/authApi';
+import toast from 'react-hot-toast';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -10,7 +11,7 @@ const Login = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // If user is already logged in (token exists), redirect to /dashboard
+    // If user is already logged in (token exists), redirect to dashboard
     if (localStorage.getItem('token')) {
       navigate('/'); 
     }
@@ -19,28 +20,52 @@ const Login = () => {
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+    
+    // Validate inputs
+    if (!email.trim() || !password.trim()) {
+      setError('Please enter email and password');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
       const response = await authApi.loginUser(email, password);
-      // #region agent log
-      fetch('http://127.0.0.1:7554/ingest/4f94b0ee-8c6b-4772-8deb-697210683d48',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'99ff6c'},body:JSON.stringify({sessionId:'99ff6c',hypothesisId:'A',location:'Login.jsx:handleLogin',message:'login response',data:{status:response.status,hasData:!!response.data,hasNestedData:!!response.data?.data,message:response.data?.message},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
-      // Depending on axios response structure (usually wrapped in response.data)
-      const { token, user } = response.data.data ? response.data.data : response.data;
+      
+      // Handle flexible response structure
+      let token, user;
+      
+      if (response.data?.data?.token) {
+        // Structure: { data: { token, user } }
+        token = response.data.data.token;
+        user = response.data.data.user;
+      } else if (response.data?.token) {
+        // Structure: { token, user }
+        token = response.data.token;
+        user = response.data.user;
+      } else {
+        throw new Error('Invalid response structure from server');
+      }
+
+      if (!token || !user) {
+        throw new Error('Missing token or user data in response');
+      }
       
       // Store auth info
       localStorage.setItem('token', token);
-      localStorage.setItem('user_role', user.role);
+      localStorage.setItem('user_role', user.role || 'staff');
       localStorage.setItem('user', JSON.stringify(user));
       
-      // Redirect to dashboard (assuming '/' is the dashboard)
+      toast.success('Login successful!');
+      // Redirect to dashboard
       navigate('/');
     } catch (err) {
-      // #region agent log
-      fetch('http://127.0.0.1:7554/ingest/4f94b0ee-8c6b-4772-8deb-697210683d48',{method:'POST',headers:{'Content-Type':'application/json','X-Debug-Session-Id':'99ff6c'},body:JSON.stringify({sessionId:'99ff6c',hypothesisId:'A',location:'Login.jsx:handleLogin',message:'login error',data:{status:err.response?.status,message:err.response?.data?.message,url:err.config?.url},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
+      console.error('Login error:', err);
+      const errorMessage = err.response?.data?.message 
+        || err.message 
+        || 'Login failed. Please try again.';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -75,9 +100,11 @@ const Login = () => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={isLoading}
               required
               style={{
-                width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none'
+                width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none',
+                opacity: isLoading ? 0.6 : 1
               }}
               placeholder="admin@example.com"
             />
@@ -91,16 +118,18 @@ const Login = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading}
               required
               style={{
-                width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none'
+                width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none',
+                opacity: isLoading ? 0.6 : 1
               }}
               placeholder="••••••••"
             />
           </div>
 
           {error && (
-            <div style={{ color: '#ef4444', fontSize: '14px', marginTop: '-8px' }}>
+            <div style={{ color: '#ef4444', fontSize: '14px', marginTop: '-8px', padding: '8px', backgroundColor: '#fee2e2', borderRadius: '4px' }}>
               {error}
             </div>
           )}
@@ -109,7 +138,7 @@ const Login = () => {
             type="submit"
             disabled={isLoading}
             style={{
-              width: '100%', padding: '10px', background: '#2563eb', color: '#fff', 
+              width: '100%', padding: '10px', background: isLoading ? '#93c5fd' : '#2563eb', color: '#fff', 
               borderRadius: '6px', border: 'none', fontWeight: '500', cursor: isLoading ? 'not-allowed' : 'pointer',
               marginTop: '8px'
             }}

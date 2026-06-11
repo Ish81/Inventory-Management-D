@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { authApi } from '../../api/authApi';
+import toast from 'react-hot-toast';
 
 const Register = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [role, setRole] = useState('staff');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -13,13 +15,37 @@ const Register = () => {
   const handleRegister = async (e) => {
     e.preventDefault();
     setError('');
+
+    // Validate inputs
+    if (!email.trim() || !password.trim() || !confirmPassword.trim()) {
+      setError('Please fill all fields');
+      return;
+    }
+
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters');
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError('Passwords do not match');
+      return;
+    }
+
     setIsLoading(true);
 
     try {
-      await authApi.registerUser(email, password, role);
+      const response = await authApi.registerUser(email, password, role);
+      
+      toast.success('Registration successful! Please login.');
       navigate('/login');
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+      console.error('Register error:', err);
+      const errorMessage = err.response?.data?.message 
+        || err.message 
+        || 'Registration failed. Please try again.';
+      setError(errorMessage);
+      toast.error(errorMessage);
     } finally {
       setIsLoading(false);
     }
@@ -54,9 +80,11 @@ const Register = () => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              disabled={isLoading}
               required
               style={{
-                width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none'
+                width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none',
+                opacity: isLoading ? 0.6 : 1
               }}
               placeholder="user@example.com"
             />
@@ -70,9 +98,29 @@ const Register = () => {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              disabled={isLoading}
               required
               style={{
-                width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none'
+                width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none',
+                opacity: isLoading ? 0.6 : 1
+              }}
+              placeholder="••••••••"
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', marginBottom: '8px', fontSize: '14px', fontWeight: '500', color: '#374151' }}>
+              Confirm Password
+            </label>
+            <input
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              disabled={isLoading}
+              required
+              style={{
+                width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none',
+                opacity: isLoading ? 0.6 : 1
               }}
               placeholder="••••••••"
             />
@@ -85,18 +133,20 @@ const Register = () => {
             <select
               value={role}
               onChange={(e) => setRole(e.target.value)}
+              disabled={isLoading}
               style={{
-                width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none', background: '#fff'
+                width: '100%', padding: '10px', borderRadius: '6px', border: '1px solid #d1d5db', outline: 'none', background: '#fff',
+                opacity: isLoading ? 0.6 : 1
               }}
             >
-              <option value="admin">Admin</option>
-              <option value="manager">Manager</option>
               <option value="staff">Staff</option>
+              <option value="manager">Manager</option>
+              <option value="admin">Admin</option>
             </select>
           </div>
 
           {error && (
-            <div style={{ color: '#ef4444', fontSize: '14px', marginTop: '-8px' }}>
+            <div style={{ color: '#ef4444', fontSize: '14px', marginTop: '-8px', padding: '8px', backgroundColor: '#fee2e2', borderRadius: '4px' }}>
               {error}
             </div>
           )}
@@ -105,7 +155,7 @@ const Register = () => {
             type="submit"
             disabled={isLoading}
             style={{
-              width: '100%', padding: '10px', background: '#2563eb', color: '#fff', 
+              width: '100%', padding: '10px', background: isLoading ? '#93c5fd' : '#2563eb', color: '#fff', 
               borderRadius: '6px', border: 'none', fontWeight: '500', cursor: isLoading ? 'not-allowed' : 'pointer',
               marginTop: '8px'
             }}
