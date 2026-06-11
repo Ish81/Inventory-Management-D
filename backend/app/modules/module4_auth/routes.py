@@ -2,7 +2,7 @@ import json, time
 from flask import Blueprint, request
 from . import controllers
 
-auth_bp = Blueprint('auth', __name__, url_prefix='/auth')
+auth_bp = Blueprint('auth', __name__)
 
 def _dbg(location, message, data, hypothesis_id):
     # #region agent log
@@ -13,13 +13,13 @@ def _dbg(location, message, data, hypothesis_id):
         pass
     # #endregion
 
-@auth_bp.route('/register', methods=['POST'])
+@auth_bp.route('/auth/register', methods=['POST'])
 def register():
     data = request.get_json()
     _dbg('routes.py:register', 'register hit', {'path': request.path, 'email': (data or {}).get('email'), 'role': (data or {}).get('role')}, 'A')
     return controllers.register_controller(data)
 
-@auth_bp.route('/login', methods=['POST'])
+@auth_bp.route('/auth/login', methods=['POST'])
 def login():
     data = request.get_json()
     _dbg('routes.py:login', 'login hit', {'path': request.path, 'email': (data or {}).get('email')}, 'A')
