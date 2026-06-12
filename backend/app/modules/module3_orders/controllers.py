@@ -1,5 +1,6 @@
-from flask import request
+from flask import request, g
 from app.shared.response_helpers import success_response, error_response, paginated_response
+from app.shared.audit import log_action
 from . import services
 from .validators import validate_purchase_order_data, validate_sales_order_data
 
@@ -44,6 +45,10 @@ def create_purchase_order():
         return error_response("Validation failed", 422, errors)
 
     order = services.create_purchase_order(data)
+    # Log audit action
+    user_id = getattr(g, 'current_user', {}).get('user_id')
+    if user_id:
+        log_action(user_id, 'create', 'purchase_order', order['id'], {'order_number': order.get('order_number')})
     return success_response(order, "Purchase order created successfully", 201)
 
 
@@ -107,6 +112,10 @@ def create_sales_order():
         return error_response("Validation failed", 422, errors)
 
     order = services.create_sales_order(data)
+    # Log audit action
+    user_id = getattr(g, 'current_user', {}).get('user_id')
+    if user_id:
+        log_action(user_id, 'create', 'sales_order', order['id'], {'order_number': order.get('order_number')})
     return success_response(order, "Sales order created successfully", 201)
 
 

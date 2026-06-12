@@ -12,10 +12,12 @@ const Login = () => {
 
   useEffect(() => {
     // If user is already logged in (token exists), redirect to dashboard
-    if (localStorage.getItem('token')) {
+    // But only if not already on the login page to prevent redirect loops
+    const token = localStorage.getItem('token');
+    if (token && window.location.pathname === '/login') {
       navigate('/'); 
     }
-  }, [navigate]);
+  }, []);
 
   const handleLogin = async (e) => {
     e.preventDefault();

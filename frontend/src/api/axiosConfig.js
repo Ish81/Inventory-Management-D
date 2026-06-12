@@ -28,9 +28,9 @@ apiClient.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Module 4 will add redirect to login here
+      // Don't auto-redirect to prevent redirect loops
+      // Components should handle 401 errors appropriately
       console.warn('Unauthorized — login required');
-      window.location.href = '/login';
     }
     return Promise.reject(error);
   }

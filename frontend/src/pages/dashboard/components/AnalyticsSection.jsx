@@ -37,6 +37,7 @@ const AnalyticsSection = () => {
         // Extract data based on standard response wrapper
         setData(response.data.data ? response.data.data : response.data);
       } catch (err) {
+        console.error('Analytics fetch error:', err);
         setError(true);
       } finally {
         setLoading(false);

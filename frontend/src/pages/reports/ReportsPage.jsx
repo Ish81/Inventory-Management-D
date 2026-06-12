@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import MainLayout from '../../layouts/MainLayout';
 import PageHeader from '../../components/common/PageHeader';
 import { analyticsApi } from '../../api/analyticsApi';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
@@ -94,19 +93,19 @@ const ReportsPage = () => {
 
   if (loading) {
     return (
-      <MainLayout>
+      <>
         <PageHeader title="Reports" subtitle="Inventory analytics and summaries" />
         <LoadingSpinner message="Loading reports..." />
-      </MainLayout>
+      </>
     );
   }
 
   if (error || !data) {
     return (
-      <MainLayout>
+      <>
         <PageHeader title="Reports" subtitle="Inventory analytics and summaries" />
         <EmptyState message={error || "Failed to load analytics data"} />
-      </MainLayout>
+      </>
     );
   }
 
@@ -118,7 +117,7 @@ const ReportsPage = () => {
   const totalOrders = monthlyOrders.reduce((sum, item) => sum + (item.count || 0), 0);
 
   return (
-    <MainLayout>
+    <>
       <PageHeader 
         title="Reports" 
         subtitle="Inventory analytics and summaries"
@@ -196,7 +195,7 @@ const ReportsPage = () => {
           </div>
         </div>
       </div>
-    </MainLayout>
+    </>
   );
 };
 

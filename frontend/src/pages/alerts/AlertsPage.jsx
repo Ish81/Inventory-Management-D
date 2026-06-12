@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import MainLayout from '../../layouts/MainLayout';
 import PageHeader from '../../components/common/PageHeader';
 import { alertsApi } from '../../api/alertsApi';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
@@ -43,7 +42,7 @@ const AlertsPage = () => {
   };
 
   return (
-    <MainLayout>
+    <>
       <PageHeader 
         title="Alerts" 
         subtitle="System and stock notifications"
@@ -77,7 +76,34 @@ const AlertsPage = () => {
       {loading ? (
         <LoadingSpinner message="Loading alerts..." />
       ) : alerts.length === 0 ? (
-        <EmptyState message={`No ${filter === 'all' ? '' : filter} alerts found`} />
+        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '40px 20px', textAlign: 'center' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>🔔</div>
+          <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#111827', marginBottom: '8px' }}>
+            {filter === 'all' ? 'No Alerts' : `No ${filter} Alerts`}
+          </h3>
+          <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '24px' }}>
+            {filter === 'all' 
+              ? 'You have no alerts at the moment. Alerts will appear here for important system notifications.'
+              : `No ${filter} alerts found. Try selecting a different filter.`}
+          </p>
+          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <div style={{ padding: '16px', background: '#fef3c7', borderRadius: '8px', border: '1px solid #f59e0b', minWidth: '200px' }}>
+              <div style={{ fontSize: '24px', marginBottom: '8px' }}>⚠️</div>
+              <div style={{ fontSize: '13px', fontWeight: '500', color: '#92400e' }}>Critical Alerts</div>
+              <div style={{ fontSize: '12px', color: '#b45309' }}>Urgent system issues</div>
+            </div>
+            <div style={{ padding: '16px', background: '#dbeafe', borderRadius: '8px', border: '1px solid #3b82f6', minWidth: '200px' }}>
+              <div style={{ fontSize: '24px', marginBottom: '8px' }}>ℹ️</div>
+              <div style={{ fontSize: '13px', fontWeight: '500', color: '#1e40af' }}>Info Alerts</div>
+              <div style={{ fontSize: '12px', color: '#1d4ed8' }}>General notifications</div>
+            </div>
+            <div style={{ padding: '16px', background: '#fce7f3', borderRadius: '8px', border: '1px solid #ec4899', minWidth: '200px' }}>
+              <div style={{ fontSize: '24px', marginBottom: '8px' }}>📦</div>
+              <div style={{ fontSize: '13px', fontWeight: '500', color: '#9d174d' }}>Stock Alerts</div>
+              <div style={{ fontSize: '12px', color: '#be185d' }}>Low inventory warnings</div>
+            </div>
+          </div>
+        </div>
       ) : (
         <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -147,7 +173,7 @@ const AlertsPage = () => {
           </table>
         </div>
       )}
-    </MainLayout>
+    </>
   );
 };
 

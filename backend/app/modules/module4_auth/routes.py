@@ -1,6 +1,7 @@
 import json, time
 from flask import Blueprint, request
 from . import controllers
+from .controllers import require_auth
 
 auth_bp = Blueprint('auth', __name__)
 
@@ -24,3 +25,9 @@ def login():
     data = request.get_json()
     _dbg('routes.py:login', 'login hit', {'path': request.path, 'email': (data or {}).get('email')}, 'A')
     return controllers.login_controller(data)
+
+@auth_bp.route('/auth/update-role', methods=['PUT'])
+def update_role():
+    data = request.get_json()
+    _dbg('routes.py:update_role', 'update role hit', {'path': request.path, 'email': (data or {}).get('email'), 'new_role': (data or {}).get('role')}, 'A')
+    return controllers.update_role_controller(data)

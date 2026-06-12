@@ -1,10 +1,3 @@
-"""create module4 auth tables
-
-Revision ID: f1a2b3c4d5e7
-Revises: e1a2b3c4d5e6
-Create Date: 2026-06-11
-
-"""
 from alembic import op
 import sqlalchemy as sa
 from sqlalchemy.sql import table, column
