@@ -1,0 +1,27 @@
+# ================================================
+# Smart Inventory & Warehouse Management System
+# Backend Python Dependencies
+# ================================================
+# Install: pip install -r requirements.txt
+# ================================================
+
+# --- Core Framework ---
+Flask==3.1.1                    # Web framework
+Flask-Cors==5.0.1               # Allow React (port 3000) to call Flask (port 5000)
+
+# --- Database ---
+Flask-SQLAlchemy==3.1.1         # SQLAlchemy ORM integration with Flask
+psycopg2-binary==2.9.10        # PostgreSQL driver for Python
+Flask-Migrate==4.1.0            # Database migration management
+
+# --- Validation & Serialization ---
+marshmallow==3.25.1             # Data validation and serialization
+flask-marshmallow==1.2.1        # Marshmallow integration with Flask
+marshmallow-sqlalchemy==1.1.0   # Auto-generate schemas from SQLAlchemy models
+
+# --- Utilities ---
+python-dotenv==1.1.0            # Load .env files into environment variables
+
+# --- Testing ---
+pytest==8.3.5                   # Testing framework
+pytest-cov==6.1.1               # Test coverage reporting
