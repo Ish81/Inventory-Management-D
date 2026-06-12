@@ -120,3 +120,45 @@ def login_controller(data):
     }
     
     return success_response(response_data, "Login successful", 200)
+
+def update_role_controller(data):
+    if not data:
+        return error_response("No data provided", 400)
+        
+    email = data.get('email')
+    new_role_name = data.get('role')
+    
+    if not email or not new_role_name:
+        return error_response("Email and new role are required", 400)
+        
+    try:
+        user = models.get_user_by_email(email)
+    except Exception as e:
+        _dbg('controllers.py:update_role', 'user lookup failed', {'email': email, 'error': type(e).__name__, 'detail': str(e)[:200]}, 'B')
+        raise
+    
+    if not user:
+        return error_response("User not found", 404)
+        
+    try:
+        new_role = models.get_role_by_name(new_role_name)
+    except Exception as e:
+        _dbg('controllers.py:update_role', 'role lookup failed', {'role_name': new_role_name, 'error': type(e).__name__, 'detail': str(e)[:200]}, 'B')
+        raise
+        
+    if not new_role:
+        return error_response(f"Role '{new_role_name}' does not exist", 400)
+        
+    try:
+        updated_user = models.update_user_role(email, new_role['id'])
+    except Exception as e:
+        _dbg('controllers.py:update_role', 'role update failed', {'email': email, 'new_role_id': new_role['id'], 'error': type(e).__name__, 'detail': str(e)[:200]}, 'C')
+        return error_response("Failed to update user role", 500)
+    
+    user_dict = {
+        'id': updated_user['id'],
+        'email': updated_user['email'],
+        'role': new_role['name']
+    }
+    
+    return success_response(user_dict, "User role updated successfully", 200)

@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import MainLayout from '../../layouts/MainLayout';
 import PageHeader from '../../components/common/PageHeader';
 import { auditApi } from '../../api/auditApi';
 import LoadingSpinner from '../../components/common/LoadingSpinner';
@@ -25,7 +24,7 @@ const AuditLogPage = () => {
   }, []);
 
   return (
-    <MainLayout>
+    <>
       <PageHeader 
         title="Audit Log" 
         subtitle="Full action history across all modules"
@@ -34,7 +33,30 @@ const AuditLogPage = () => {
       {loading ? (
         <LoadingSpinner message="Loading audit logs..." />
       ) : logs.length === 0 ? (
-        <EmptyState message="No audit logs found" />
+        <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', padding: '40px 20px', textAlign: 'center' }}>
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>📋</div>
+          <h3 style={{ fontSize: '16px', fontWeight: '600', color: '#111827', marginBottom: '8px' }}>No Audit Logs Yet</h3>
+          <p style={{ fontSize: '14px', color: '#6b7280', marginBottom: '24px' }}>
+            Audit logs will appear here as you perform actions in the system.
+          </p>
+          <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
+            <div style={{ padding: '16px', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb', minWidth: '200px' }}>
+              <div style={{ fontSize: '24px', marginBottom: '8px' }}>📦</div>
+              <div style={{ fontSize: '13px', fontWeight: '500', color: '#374151' }}>Create Products</div>
+              <div style={{ fontSize: '12px', color: '#6b7280' }}>Add items to inventory</div>
+            </div>
+            <div style={{ padding: '16px', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb', minWidth: '200px' }}>
+              <div style={{ fontSize: '24px', marginBottom: '8px' }}>📝</div>
+              <div style={{ fontSize: '13px', fontWeight: '500', color: '#374151' }}>Manage Orders</div>
+              <div style={{ fontSize: '12px', color: '#6b7280' }}>Create purchase/sales orders</div>
+            </div>
+            <div style={{ padding: '16px', background: '#f9fafb', borderRadius: '8px', border: '1px solid #e5e7eb', minWidth: '200px' }}>
+              <div style={{ fontSize: '24px', marginBottom: '8px' }}>⚙️</div>
+              <div style={{ fontSize: '13px', fontWeight: '500', color: '#374151' }}>Update Settings</div>
+              <div style={{ fontSize: '12px', color: '#6b7280' }}>Modify system configuration</div>
+            </div>
+          </div>
+        </div>
       ) : (
         <div style={{ background: '#fff', borderRadius: '12px', border: '1px solid #e5e7eb', overflow: 'hidden' }}>
           <table style={{ width: '100%', borderCollapse: 'collapse' }}>
@@ -92,7 +114,7 @@ const AuditLogPage = () => {
           </table>
         </div>
       )}
-    </MainLayout>
+    </>
   );
 };
 

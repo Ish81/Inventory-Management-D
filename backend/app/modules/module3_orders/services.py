@@ -1,5 +1,6 @@
 from app.extensions import db
 from .models import PurchaseOrder, PurchaseOrderItem, SalesOrder, SalesOrderItem
+from app.modules.module4_analytics import services as analytics_services
 from datetime import datetime, timezone
 import random
 import string
@@ -152,6 +153,10 @@ def update_purchase_order_status(po_id, new_status):
     order.updated_at = datetime.now(timezone.utc)
     db.session.commit()
 
+    # Check for low stock alerts when order is received (stock increases)
+    if new_status == 'received':
+        analytics_services.check_low_stock()
+
     return order.to_dict(), None
 
 
@@ -267,6 +272,10 @@ def update_sales_order_status(so_id, new_status):
     order.status = new_status
     order.updated_at = datetime.now(timezone.utc)
     db.session.commit()
+
+    # Check for low stock alerts when order is completed (stock decreases)
+    if new_status == 'completed':
+        analytics_services.check_low_stock()
 
     return order.to_dict(), None
 

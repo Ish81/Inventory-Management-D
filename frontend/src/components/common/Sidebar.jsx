@@ -27,22 +27,18 @@ const navItems = [
 ];
 
 const Sidebar = () => {
-  const userRole = localStorage.getItem('user_role');
+  const userRole = localStorage.getItem('user_role') || 'staff';
 
   const filteredNavItems = [...navItems];
-  if (userRole === 'admin' || userRole === 'manager') {
-    const module4Links = [
-      { to: '/alerts', label: 'Alerts', icon: '🔔' },
-      { to: '/reports', label: 'Reports', icon: '📊' }
-    ];
-    if (userRole === 'admin') {
-      module4Links.push({ to: '/audit-logs', label: 'Audit Log', icon: '📋' });
-    }
-    filteredNavItems.push({
-      section: 'MODULE 4 — ANALYTICS',
-      links: module4Links
-    });
-  }
+  const module4Links = [
+    { to: '/alerts', label: 'Alerts', icon: '🔔' },
+    { to: '/reports', label: 'Reports', icon: '📊' },
+    { to: '/audit-logs', label: 'Audit Log', icon: '📋' }
+  ];
+  filteredNavItems.push({
+    section: 'MODULE 4 — ANALYTICS',
+    links: module4Links
+  });
   return (
     <aside style={{
       width: '240px',

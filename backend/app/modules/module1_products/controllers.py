@@ -1,5 +1,6 @@
-from flask import request
+from flask import request, g
 from app.shared.response_helpers import success_response, error_response
+from app.shared.audit import log_action
 from . import services
 
 
@@ -24,6 +25,10 @@ def create_category():
     category, error = services.create_category(data)
     if error:
         return error_response(error, 400)
+    # Log audit action
+    user_id = getattr(g, 'current_user', {}).get('user_id')
+    if user_id:
+        log_action(user_id, 'create', 'category', category.id, {'name': category.name})
     return success_response(category.to_dict(), "Category created successfully", 201)
 
 
@@ -75,6 +80,10 @@ def create_supplier():
     supplier, error = services.create_supplier(data)
     if error:
         return error_response(error, 400)
+    # Log audit action
+    user_id = getattr(g, 'current_user', {}).get('user_id')
+    if user_id:
+        log_action(user_id, 'create', 'supplier', supplier.id, {'name': supplier.name, 'email': supplier.email})
     return success_response(supplier.to_dict(), "Supplier created successfully", 201)
 
 
@@ -129,6 +138,10 @@ def create_product():
     product, error = services.create_product(data)
     if error:
         return error_response(error, 400)
+    # Log audit action
+    user_id = getattr(g, 'current_user', {}).get('user_id')
+    if user_id:
+        log_action(user_id, 'create', 'product', product.id, {'name': product.name, 'sku': product.sku})
     return success_response(product.to_dict(), "Product created successfully", 201)
 
 

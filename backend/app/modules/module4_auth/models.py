@@ -53,3 +53,22 @@ def get_user_by_id(user_id):
             return cur.fetchone()
     finally:
         conn.close()
+
+def update_user_role(email, new_role_id):
+    conn = get_connection()
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                UPDATE users 
+                SET role_id = %s 
+                WHERE email = %s
+                RETURNING *
+                """,
+                (new_role_id, email)
+            )
+            user = cur.fetchone()
+            conn.commit()
+            return user
+    finally:
+        conn.close()

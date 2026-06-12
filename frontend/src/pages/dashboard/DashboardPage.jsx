@@ -86,8 +86,8 @@ const DashboardPage = () => {
         </>
       )}
 
-      {/* Module 4 Analytics Section */}
-      <AnalyticsSection />
+      {/* Module 4 Analytics Section - Temporarily disabled to debug redirect loop */}
+      {/* <AnalyticsSection /> */}
 
       {/* Recent tables */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
