@@ -28,7 +28,7 @@ def check_low_stock():
             if existing_alert:
                 continue
                 
-            quantity = item['quantity']
+            quantity = item['quantity_available']
             reorder_level = item['reorder_level']
             product_name = item['product_name']
             warehouse_id = item['warehouse_id']

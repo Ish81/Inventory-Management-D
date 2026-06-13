@@ -24,4 +24,4 @@ export const ALERT_SEVERITIES = {
   info: { label: 'Info', color: '#185FA5', bg: '#E6F1FB' },
 };
 
-export const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api/v1';
+export const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api/v1';

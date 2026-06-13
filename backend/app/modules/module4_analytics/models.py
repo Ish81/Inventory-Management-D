@@ -20,7 +20,7 @@ def get_low_stock_count():
                 SELECT COUNT(*) as count 
                 FROM warehouse_stock ws
                 JOIN products p ON ws.product_id = p.id
-                WHERE ws.quantity < p.reorder_level
+                WHERE ws.quantity_available < p.reorder_level
             """)
             result = cur.fetchone()
             return result['count'] if result else 0
@@ -32,7 +32,7 @@ def get_inventory_valuation():
     try:
         with conn.cursor() as cur:
             cur.execute("""
-                SELECT SUM(ws.quantity * p.price) as total_value
+                SELECT SUM(ws.quantity_available * p.price) as total_value
                 FROM warehouse_stock ws
                 JOIN products p ON ws.product_id = p.id
             """)
@@ -174,10 +174,10 @@ def get_low_stock_items():
         with conn.cursor() as cur:
             cur.execute("""
                 SELECT p.id as product_id, p.name as product_name, p.reorder_level, 
-                       ws.quantity, ws.warehouse_id
+                       ws.quantity_available, ws.warehouse_id
                 FROM warehouse_stock ws
                 JOIN products p ON ws.product_id = p.id
-                WHERE ws.quantity < p.reorder_level
+                WHERE ws.quantity_available < p.reorder_level
             """)
             results = cur.fetchall()
             return results if results else []

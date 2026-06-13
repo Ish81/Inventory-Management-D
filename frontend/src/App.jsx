@@ -21,6 +21,12 @@ import AlertsPage from './pages/alerts/AlertsPage';
 import ReportsPage from './pages/reports/ReportsPage';
 import AuditLogPage from './pages/audit/AuditLogPage';
 
+// Module 2 pages
+import WarehouseDashboard from './features/dashboard/Dashboard';
+import StockMovement from './features/inventory/Inventory';
+import Transfers from './features/transfers/Transfers';
+import Warehouses from './features/warehouses/Warehouses';
+
 const App = () => {
   return (
     <BrowserRouter>
@@ -39,6 +45,12 @@ const App = () => {
         {/* Protected/Layout Routes */}
         <Route element={<MainLayout />}>
           <Route path="/" element={<DashboardPage />} />
+
+          {/* Module 2 — Inventory & Warehouses */}
+          <Route path="/warehouses" element={<Warehouses />} />
+          <Route path="/stock-movement" element={<StockMovement />} />
+          <Route path="/transfers" element={<Transfers />} />
+          <Route path="/inventory-dashboard" element={<WarehouseDashboard />} />
 
           {/* Purchase Orders — Module 3 */}
           <Route path="/purchase-orders" element={<PurchaseOrderListPage />} />

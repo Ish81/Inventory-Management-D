@@ -34,6 +34,7 @@ from flask_cors import CORS
 
 from app.core.config.settings import config_by_name
 from app.core.database.db import db, ma, migrate
+from app.shared.error_handlers import register_error_handlers
 
 
 def create_app(config_name: str = "development") -> Flask:
@@ -82,19 +83,30 @@ def create_app(config_name: str = "development") -> Flask:
     migrate.init_app(app, db)
 
     # Import models so Alembic can detect them
-    from app.module2_inventory import models
+    from app.module2_inventory import models as _module2_models  # noqa: F401
+    from app.modules.module1_products import models as _module1_models  # noqa: F401
+    from app.modules.module3_orders import models as _module3_models  # noqa: F401
 
     # ---- Step 5: Register module blueprints ----
     _register_blueprints(app)
 
-    # ---- Step 6: Health check endpoint ----
+    # ---- Step 6: Register global error handlers ----
+    register_error_handlers(app)
+
+    # ---- Step 7: Health check endpoint ----
     # A simple endpoint to verify the API is running
     # Visit: http://localhost:5000/api/v1/health
     @app.route("/api/v1/health")
     def health_check():
         return {
             "status": "healthy",
-            "module": "Inventory & Warehouse Management",
+            "modules": [
+                "products",
+                "inventory",
+                "orders",
+                "auth",
+                "analytics",
+            ],
             "version": "1.0.0"
         }
 
@@ -120,4 +132,21 @@ def _register_blueprints(app: Flask) -> None:
     app.register_blueprint(stock_bp, url_prefix="/api/v1")
     app.register_blueprint(movement_bp, url_prefix="/api/v1")
     app.register_blueprint(dashboard_bp, url_prefix="/api/v1")
+
+    # ----- Module 1: Product & Supplier Management -----
+    from app.modules.module1_products.routes import products_bp
+
+    app.register_blueprint(products_bp, url_prefix="/api/v1")
+
+    # ----- Module 3: Purchase & Sales Orders -----
+    from app.modules.module3_orders.routes import orders_bp
+
+    app.register_blueprint(orders_bp, url_prefix="/api/v1")
+
+    # ----- Module 4: Auth, Analytics, Alerts -----
+    from app.modules.module4_auth.routes import auth_bp
+    from app.modules.module4_analytics.routes import analytics_bp
+
+    app.register_blueprint(auth_bp, url_prefix="/api/v1")
+    app.register_blueprint(analytics_bp, url_prefix="/api/v1")
 

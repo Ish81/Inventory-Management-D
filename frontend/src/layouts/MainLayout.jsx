@@ -15,6 +15,8 @@ import {
   ListItemText,
   Avatar,
   Badge,
+  Menu,
+  MenuItem,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
@@ -35,7 +37,8 @@ const menuGroups = [
   {
     title: 'CORE INVENTORY',
     items: [
-      { text: 'Warehouse Dashboard', icon: <DashboardIcon sx={{ fontSize: 20 }} />, path: '/' },
+      { text: 'Dashboard', icon: <DashboardIcon sx={{ fontSize: 20 }} />, path: '/' },
+      { text: 'Warehouses', icon: <StockIcon sx={{ fontSize: 20 }} />, path: '/warehouses' },
       { text: 'Stock Movement', icon: <StockIcon sx={{ fontSize: 20 }} />, path: '/stock-movement' },
       { text: 'Transfer Stock', icon: <TransferIcon sx={{ fontSize: 20 }} />, path: '/transfers' },
     ]
@@ -56,11 +59,11 @@ const menuGroups = [
     ]
   },
   {
-    title: 'ANALYTICS & SETTINGS',
+    title: 'ANALYTICS',
     items: [
       { text: 'Reports', icon: <ReportsIcon sx={{ fontSize: 20 }} />, path: '/reports' },
-      { text: 'User Management', icon: <PeopleIcon sx={{ fontSize: 20 }} />, path: '/users' },
-      { text: 'Settings', icon: <SettingsIcon sx={{ fontSize: 20 }} />, path: '/settings' },
+      { text: 'Alerts', icon: <ReportsIcon sx={{ fontSize: 20 }} />, path: '/alerts' },
+      { text: 'Audit Logs', icon: <PeopleIcon sx={{ fontSize: 20 }} />, path: '/audit-logs' },
     ]
   }
 ];
@@ -69,9 +72,25 @@ const MainLayout = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [currentRole, setCurrentRole] = useState(localStorage.getItem('userRole') || 'Admin');
 
   const handleDrawerToggle = () => {
     setMobileOpen(!mobileOpen);
+  };
+
+  const handleMenuOpen = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleMenuClose = () => {
+    setAnchorEl(null);
+  };
+
+  const handleRoleChange = (role) => {
+    setCurrentRole(role);
+    localStorage.setItem('userRole', role);
+    handleMenuClose();
   };
 
   // Get current page name
@@ -190,19 +209,6 @@ const MainLayout = () => {
     </Box>
   );
 
-  const HeaderContent = () => (
-    <Box sx={{ display: 'flex', alignItems: 'center', width: '100%', justifyContent: 'flex-end' }}>
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, ml: 1 }}>
-          <Avatar sx={{ width: 32, height: 32, bgcolor: '#2563eb', fontSize: '0.9rem', fontWeight: 'bold' }}>A</Avatar>
-          <Typography variant="body2" sx={{ color: '#0f172a', fontWeight: 600, display: { xs: 'none', sm: 'block' } }}>
-            Admin
-          </Typography>
-        </Box>
-      </Box>
-    </Box>
-  );
-
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', bgcolor: 'background.default' }}>
       <AppBar
@@ -223,7 +229,80 @@ const MainLayout = () => {
           >
             <MenuIcon />
           </IconButton>
-          <HeaderContent />
+
+          {/* Profile section — inlined to preserve anchorEl across re-renders */}
+          <Box sx={{ display: 'flex', alignItems: 'center', flexGrow: 1, justifyContent: 'flex-end' }}>
+            <Box
+              onClick={handleMenuOpen}
+              sx={{ display: 'flex', alignItems: 'center', gap: 1, cursor: 'pointer', p: 0.5, borderRadius: 1, '&:hover': { bgcolor: 'rgba(0,0,0,0.04)' } }}
+            >
+              <Avatar sx={{ width: 32, height: 32, bgcolor: '#2563eb', fontSize: '0.9rem', fontWeight: 'bold' }}>
+                {currentRole.charAt(0).toUpperCase()}
+              </Avatar>
+              <Typography variant="body2" sx={{ color: '#0f172a', fontWeight: 600, display: { xs: 'none', sm: 'block' } }}>
+                {currentRole}
+              </Typography>
+            </Box>
+          </Box>
+
+          {/* Dropdown menu — rendered outside the flex container so it doesn't affect layout */}
+          <Menu
+            anchorEl={anchorEl}
+            open={Boolean(anchorEl)}
+            onClose={handleMenuClose}
+            PaperProps={{
+              elevation: 3,
+              sx: {
+                overflow: 'visible',
+                filter: 'drop-shadow(0px 4px 12px rgba(0,0,0,0.1))',
+                mt: 1,
+                minWidth: 220,
+                borderRadius: '12px',
+                border: '1px solid #e2e8f0',
+                '&::before': {
+                  content: '""',
+                  display: 'block',
+                  position: 'absolute',
+                  top: 0,
+                  right: 14,
+                  width: 10,
+                  height: 10,
+                  bgcolor: 'background.paper',
+                  transform: 'translateY(-50%) rotate(45deg)',
+                  zIndex: 0,
+                  borderLeft: '1px solid #e2e8f0',
+                  borderTop: '1px solid #e2e8f0',
+                },
+              },
+            }}
+            transformOrigin={{ horizontal: 'right', vertical: 'top' }}
+            anchorOrigin={{ horizontal: 'right', vertical: 'bottom' }}
+          >
+            <Box sx={{ px: 2, py: 1.5, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+              <Avatar sx={{ width: 48, height: 48, bgcolor: '#2563eb', mb: 1, fontSize: '1.2rem', fontWeight: 'bold' }}>
+                {currentRole.charAt(0).toUpperCase()}
+              </Avatar>
+              <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>
+                Demo User
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                user@smartims.com
+              </Typography>
+            </Box>
+            <Divider sx={{ my: 1 }} />
+            <Typography variant="caption" sx={{ px: 2, pb: 1, display: 'block', color: 'text.secondary', fontWeight: 600, letterSpacing: '0.5px' }}>
+              SWITCH ROLE
+            </Typography>
+            <MenuItem onClick={() => handleRoleChange('Admin')} selected={currentRole === 'Admin'}>
+              Admin
+            </MenuItem>
+            <MenuItem onClick={() => handleRoleChange('Manager')} selected={currentRole === 'Manager'}>
+              Manager
+            </MenuItem>
+            <MenuItem onClick={() => handleRoleChange('Staff')} selected={currentRole === 'Staff'}>
+              Staff
+            </MenuItem>
+          </Menu>
         </Toolbar>
       </AppBar>
 
