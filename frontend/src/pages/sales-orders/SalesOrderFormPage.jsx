@@ -1,10 +1,10 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { salesOrderApi } from '../../api/salesOrderApi';
 import PageHeader from '../../components/common/PageHeader';
 import toast from 'react-hot-toast';
 
-const emptyItem = () => ({ product_name: '', product_sku: '', quantity: '', unit_price: '' });
+const emptyItem = () => ({ product_id: '', product_name: '', product_sku: '', quantity: '', unit_price: '', available_stock: null });
 
 const SalesOrderFormPage = () => {
   const navigate = useNavigate();
@@ -12,10 +12,46 @@ const SalesOrderFormPage = () => {
   const [form, setForm] = useState({ customer_name: '', customer_email: '', customer_phone: '', notes: '' });
   const [items, setItems] = useState([emptyItem()]);
   const [errors, setErrors] = useState({});
+  const [availableProducts, setAvailableProducts] = useState([]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const res = await salesOrderApi.getAvailableItems();
+        setAvailableProducts(res.data.data);
+      } catch (err) {
+        toast.error('Failed to load available products');
+      }
+    };
+    fetchProducts();
+  }, []);
 
   const updateForm = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
     if (errors[field]) setErrors(prev => ({ ...prev, [field]: null }));
+  };
+
+  const handleProductSelect = (index, productId) => {
+    const product = availableProducts.find(p => p.id.toString() === productId);
+    if (product) {
+      setItems(prev => prev.map((item, i) => i === index ? {
+        ...item,
+        product_id: product.id,
+        product_name: product.name,
+        product_sku: product.sku,
+        unit_price: product.price,
+        available_stock: product.available_stock
+      } : item));
+    } else {
+      setItems(prev => prev.map((item, i) => i === index ? {
+        ...item,
+        product_id: '',
+        product_name: '',
+        product_sku: '',
+        unit_price: '',
+        available_stock: null
+      } : item));
+    }
   };
 
   const updateItem = (index, field, value) =>
@@ -32,7 +68,11 @@ const SalesOrderFormPage = () => {
     if (!form.customer_name.trim()) errs.customer_name = 'Customer name is required';
     items.forEach((item, i) => {
       if (!item.product_name.trim()) errs[`item_${i}_name`] = 'Required';
-      if (!item.quantity || Number(item.quantity) <= 0) errs[`item_${i}_qty`] = 'Must be > 0';
+      if (!item.quantity || Number(item.quantity) <= 0) {
+        errs[`item_${i}_qty`] = 'Must be > 0';
+      } else if (item.available_stock !== null && Number(item.quantity) > item.available_stock) {
+        errs[`item_${i}_qty`] = `Max ${item.available_stock}`;
+      }
       if (!item.unit_price || Number(item.unit_price) <= 0) errs[`item_${i}_price`] = 'Must be > 0';
     });
     return errs;
@@ -45,7 +85,7 @@ const SalesOrderFormPage = () => {
     try {
       const res = await salesOrderApi.create({
         ...form,
-        items: items.map(i => ({ product_name: i.product_name, product_sku: i.product_sku || null, quantity: parseInt(i.quantity), unit_price: parseFloat(i.unit_price) })),
+        items: items.map(i => ({ product_id: i.product_id || null, product_name: i.product_name, product_sku: i.product_sku || null, quantity: parseInt(i.quantity), unit_price: parseFloat(i.unit_price) })),
       });
       toast.success('Sales order created successfully!');
       navigate(`/sales-orders/${res.data.data.id}`);
@@ -99,18 +139,36 @@ const SalesOrderFormPage = () => {
                   {items.length > 1 && <button onClick={() => removeItem(index)} style={{ fontSize: '12px', color: '#dc2626', background: 'none', border: 'none', cursor: 'pointer' }}>Remove</button>}
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr 1fr 1fr', gap: '10px' }}>
-                  {[
-                    { field: 'product_name', label: 'Product Name *', placeholder: 'Product name', type: 'text', errKey: `item_${index}_name` },
-                    { field: 'product_sku', label: 'SKU', placeholder: 'SKU (optional)', type: 'text', errKey: null },
-                    { field: 'quantity', label: 'Quantity *', placeholder: '0', type: 'number', errKey: `item_${index}_qty` },
-                    { field: 'unit_price', label: 'Unit Price (₹) *', placeholder: '0.00', type: 'number', errKey: `item_${index}_price` },
-                  ].map(({ field, label, placeholder, type, errKey }) => (
-                    <div key={field}>
-                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#6b7280', marginBottom: '4px' }}>{label}</label>
-                      <input type={type} placeholder={placeholder} value={item[field]} onChange={e => updateItem(index, field, e.target.value)} style={inputStyle(errKey && errors[errKey])} min={type === 'number' ? '0' : undefined} step={field === 'unit_price' ? '0.01' : undefined} />
-                      {errKey && errors[errKey] && <p style={{ color: '#dc2626', fontSize: '10px', marginTop: '2px' }}>{errors[errKey]}</p>}
-                    </div>
-                  ))}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#6b7280', marginBottom: '4px' }}>Product *</label>
+                    <select
+                      value={item.product_id}
+                      onChange={e => handleProductSelect(index, e.target.value)}
+                      style={inputStyle(errors[`item_${index}_name`])}
+                    >
+                      <option value="">Select a product...</option>
+                      {availableProducts.map(p => (
+                        <option key={p.id} value={p.id}>
+                          {p.name} {p.sku ? `(${p.sku})` : ''} - Stock: {p.available_stock}
+                        </option>
+                      ))}
+                    </select>
+                    {errors[`item_${index}_name`] && <p style={{ color: '#dc2626', fontSize: '10px', marginTop: '2px' }}>{errors[`item_${index}_name`]}</p>}
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#6b7280', marginBottom: '4px' }}>SKU</label>
+                    <input type="text" placeholder="SKU (auto)" value={item.product_sku} disabled style={{...inputStyle(false), background: '#f3f4f6'}} />
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#6b7280', marginBottom: '4px' }}>Quantity *</label>
+                    <input type="number" placeholder="0" value={item.quantity} onChange={e => updateItem(index, 'quantity', e.target.value)} style={inputStyle(errors[`item_${index}_qty`])} min="1" />
+                    {errors[`item_${index}_qty`] && <p style={{ color: '#dc2626', fontSize: '10px', marginTop: '2px' }}>{errors[`item_${index}_qty`]}</p>}
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#6b7280', marginBottom: '4px' }}>Unit Price (₹) *</label>
+                    <input type="number" placeholder="0.00" value={item.unit_price} onChange={e => updateItem(index, 'unit_price', e.target.value)} style={inputStyle(errors[`item_${index}_price`])} min="0" step="0.01" />
+                    {errors[`item_${index}_price`] && <p style={{ color: '#dc2626', fontSize: '10px', marginTop: '2px' }}>{errors[`item_${index}_price`]}</p>}
+                  </div>
                 </div>
                 {(item.quantity && item.unit_price) && (
                   <div style={{ marginTop: '8px', textAlign: 'right', fontSize: '12px', color: '#6b7280' }}>

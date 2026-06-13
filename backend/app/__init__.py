@@ -70,7 +70,7 @@ def create_app(config_name: str = "development") -> Flask:
     CORS(app, resources={
         r"/api/*": {
             "origins": ["http://localhost:3000"],
-            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization"]
         }
     })

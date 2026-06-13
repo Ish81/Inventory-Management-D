@@ -21,3 +21,6 @@ orders_bp.route('/sales-orders', methods=['POST'])(controllers.create_sales_orde
 orders_bp.route('/sales-orders/<int:so_id>', methods=['GET'])(controllers.get_sales_order)
 orders_bp.route('/sales-orders/<int:so_id>/status', methods=['PATCH'])(controllers.update_sales_order_status)
 orders_bp.route('/sales-orders/<int:so_id>', methods=['DELETE'])(controllers.delete_sales_order)
+
+# ── Available Items ──────────────────────────────
+orders_bp.route('/sales-orders/available-items', methods=['GET'])(controllers.get_available_items)

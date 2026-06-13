@@ -7,4 +7,5 @@ export const salesOrderApi = {
   updateStatus: (id, status) =>
     apiClient.patch(`/sales-orders/${id}/status`, { status }),
   delete: (id) => apiClient.delete(`/sales-orders/${id}`),
+  getAvailableItems: () => apiClient.get('/sales-orders/available-items'),
 };

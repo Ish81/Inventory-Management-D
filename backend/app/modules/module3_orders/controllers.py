@@ -140,6 +140,12 @@ def delete_sales_order(so_id):
     return success_response(None, "Sales order deleted successfully")
 
 
+def get_available_items():
+    """GET /api/v1/sales-orders/available-items"""
+    items = services.get_available_items_with_stock()
+    return success_response(items)
+
+
 # ─────────────────────────────────────────────
 # DASHBOARD CONTROLLER
 # ─────────────────────────────────────────────

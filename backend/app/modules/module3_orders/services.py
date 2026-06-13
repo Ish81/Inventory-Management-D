@@ -1,6 +1,8 @@
 from app.extensions import db
 from .models import PurchaseOrder, PurchaseOrderItem, SalesOrder, SalesOrderItem
 from app.modules.module4_analytics.services import check_low_stock
+from app.modules.module1_products.models import Product, Category
+from app.module2_inventory.models.stock import WarehouseStock
 from datetime import datetime, timezone
 import random
 import string
@@ -116,13 +118,55 @@ def create_purchase_order(data):
     db.session.add(po)
     db.session.flush()  # Gets the PO id without full commit
 
+    # Get or create a default category for auto-created products
+    default_category = None
+
     # Create line items
     for item_data in items_data:
+        product_id = item_data.get('product_id')
+        product_name = item_data['product_name']
+        product_sku = item_data.get('product_sku')
+
+        if not product_id and product_name:
+            # Check if product exists by SKU or Name
+            existing_product = None
+            if product_sku:
+                existing_product = Product.query.filter_by(sku=product_sku.upper()).first()
+            if not existing_product:
+                existing_product = Product.query.filter(Product.name.ilike(product_name)).first()
+
+            if existing_product:
+                product_id = existing_product.id
+                product_sku = existing_product.sku
+            else:
+                # Auto-create the product
+                if not default_category:
+                    default_category = Category.query.filter(Category.name.ilike("Uncategorized")).first()
+                    if not default_category:
+                        default_category = Category()
+                        default_category.name = "Uncategorized"
+                        default_category.description = "Auto-created category"
+                        db.session.add(default_category)
+                        db.session.flush()
+                
+                # Auto-generate a SKU if missing
+                new_sku = product_sku.upper() if product_sku else f"SKU-{random.choices(string.digits, k=6)}"
+                new_product = Product()
+                new_product.name = product_name
+                new_product.sku = new_sku
+                new_product.price = item_data['unit_price']
+                new_product.category_id = default_category.id
+                new_product.supplier_id = data.get('supplier_id') or 1  # Note: Fallback to 1 if no supplier_id is provided, but typically we want the PO's supplier
+                db.session.add(new_product)
+                db.session.flush()
+                product_id = new_product.id
+                product_sku = new_sku
+
         item = PurchaseOrderItem(
             purchase_order_id=po.id,
-            product_id=item_data.get('product_id'),
-            product_name=item_data['product_name'],
-            product_sku=item_data.get('product_sku'),
+            product_id=product_id,
+            product_name=product_name,
+            product_sku=product_sku,
             quantity=item_data['quantity'],
             unit_price=item_data['unit_price'],
             total_price=item_data['total_price']
@@ -297,6 +341,25 @@ def delete_sales_order(so_id):
 # ─────────────────────────────────────────────
 # DASHBOARD SERVICES
 # ─────────────────────────────────────────────
+
+def get_available_items_with_stock():
+    """Fetch all products and their aggregated available stock across all warehouses."""
+    products = Product.query.all()
+    stock_records = WarehouseStock.query.all()
+
+    stock_by_product = {}
+    for record in stock_records:
+        if record.product_id not in stock_by_product:
+            stock_by_product[record.product_id] = 0
+        stock_by_product[record.product_id] += record.quantity_available
+
+    result = []
+    for p in products:
+        item = p.to_dict()
+        item['available_stock'] = stock_by_product.get(p.id, 0)
+        result.append(item)
+
+    return result
 
 def get_dashboard_stats():
     """
