@@ -27,6 +27,7 @@ ENV REACT_APP_API_BASE_URL=$REACT_APP_API_BASE_URL
 
 # Copy source and build production bundle (outputs to /app/build)
 COPY . .
+ENV NODE_OPTIONS=--max-old-space-size=2048
 RUN npm run build
 
 
