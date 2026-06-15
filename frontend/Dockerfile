@@ -1,6 +1,6 @@
 FROM node:trixie
 
-WORKDIR /app
+WORKDIR /app/
 
 COPY package*.json .
 COPY . . 
