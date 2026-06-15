@@ -1,0 +1,20 @@
+# ================================================
+# Root .dockerignore
+# ================================================
+# Prevents the entire repo root from being sent as
+# build context when Docker Compose builds sub-services.
+# Each service has its own .dockerignore in its folder.
+# ================================================
+
+.git/
+.gitignore
+.DS_Store
+.cursor/
+.vscode/
+*.md
+docs/
+*.log
+
+# Don't include the other service's folder
+backend/
+frontend/

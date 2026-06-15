@@ -62,14 +62,26 @@ def create_app(config_name: str = "development") -> Flask:
     # ---- Step 3: Enable CORS ----
     # CORS = Cross-Origin Resource Sharing
     #
-    # Problem: React runs on port 3000, Flask runs on port 5000.
-    # Browsers block requests between different ports by default (security).
+    # Problem: React runs on a different origin than Flask.
+    # Browsers block requests between different origins by default (security).
     # CORS tells the browser: "It's okay, allow React to call Flask."
     #
-    # We only allow requests from http://localhost:3000 (React dev server)
+    # CORS_ORIGINS env var lets you configure allowed origins without changing code:
+    #   - Local dev (CRA):  http://localhost:3000
+    #   - Docker (Nginx):   http://localhost  (port 80, Nginx proxies /api → Flask)
+    #
+    # In Docker, Nginx handles /api/* proxy internally (server-to-server),
+    # so CORS is mainly relevant for direct browser→Flask calls.
+    import os as _os
+    _cors_origins_env = _os.environ.get(
+        "CORS_ORIGINS",
+        "http://localhost:3000,http://localhost:80,http://localhost"
+    )
+    _allowed_origins = [o.strip() for o in _cors_origins_env.split(",") if o.strip()]
+
     CORS(app, resources={
         r"/api/*": {
-            "origins": ["http://localhost:3000"],
+            "origins": _allowed_origins,
             "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization"]
         }
@@ -83,9 +95,9 @@ def create_app(config_name: str = "development") -> Flask:
     migrate.init_app(app, db)
 
     # Import models so Alembic can detect them
-    from app.module2_inventory import models as _module2_models  # noqa: F401
+    from app.module2_inventory import models as _module2_models      # noqa: F401
     from app.modules.module1_products import models as _module1_models  # noqa: F401
-    from app.modules.module3_orders import models as _module3_models  # noqa: F401
+    from app.modules.module3_orders import models as _module3_models    # noqa: F401
 
     # ---- Step 5: Register module blueprints ----
     _register_blueprints(app)

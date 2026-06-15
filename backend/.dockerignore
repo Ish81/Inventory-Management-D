@@ -1,0 +1,45 @@
+# ================================================
+# .dockerignore — Backend
+# ================================================
+# Files listed here are EXCLUDED from the Docker build context.
+# Smaller context = faster builds, smaller images.
+# ================================================
+
+# --- Python virtual environment ---
+venv/
+.venv/
+env/
+
+# --- Python cache ---
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+.pytest_cache/
+
+# --- Git & IDE ---
+.git/
+.gitignore
+.DS_Store
+.cursor/
+.vscode/
+
+# --- Test files (not needed in production image) ---
+tests/
+test_*.py
+*_test.py
+
+# --- Environment files (never bake secrets into image) ---
+# The .env is injected at runtime via docker-compose env_file
+.env
+.env.*
+!.env.example
+
+# --- Docs & local notes ---
+*.md
+docs/
+
+# --- Misc ---
+*.log
+*.tmp
