@@ -2,8 +2,8 @@ FROM node:trixie
 
 WORKDIR /app/
 
-COPY package*.json .
-COPY . . 
+COPY package*.json /app/
+COPY . /app/
 
 RUN npm install
 
