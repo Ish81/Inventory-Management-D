@@ -55,20 +55,6 @@ services:
 
     ports:
       - "3000:3000"
-
-  nginx:
-    build: ./nginx
-
-    container_name: IMS-nginx
-
-    restart: always
-
-    depends_on:
-      - frontend
-      - backend
-
-    ports:
-      - "80:80"
   
 volumes:
   db_data:
