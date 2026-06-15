@@ -1,0 +1,2 @@
+CREATE DATABASE inventory_management_db;
+CREATE DATABASE inventory_db_test;
