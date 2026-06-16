@@ -4,23 +4,21 @@
 # ================================================
 
 # --- Stage 1: Build React app ---
-FROM node:18-alpine AS builder
+FROM node:20
 
 WORKDIR /app
 
 # Copy package files first (layer caching)
 COPY frontend/package.json frontend/package-lock.json ./
 
-RUN npm ci --legacy-peer-deps
+RUN npm install
 
 # Copy source and build
 COPY frontend/ .
 
-# Inject the backend API URL at build time
-ARG REACT_APP_API_BASE_URL=http://localhost:5000/api/v1
-ENV REACT_APP_API_BASE_URL=$REACT_APP_API_BASE_URL
+expose 3000
 
-RUN npm run build
+CMS ["npm", "start"]
 
 # --- Stage 2: Serve with Nginx ---
 FROM nginx:alpine
