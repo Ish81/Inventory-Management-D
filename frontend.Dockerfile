@@ -18,7 +18,7 @@ COPY frontend/ .
 
 expose 3000
 
-CMS ["npm", "start"]
+CMD ["npm", "start"]
 
 # --- Stage 2: Serve with Nginx ---
 FROM nginx:alpine
