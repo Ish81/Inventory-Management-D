@@ -13,11 +13,15 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
       - ./database/init-db.sql:/docker-entrypoint-initdb.d/initdb.sql
+    networks:
+      - ims_network
 
   backend:
     build: ./backend
     container_name: IMS-backend
     restart: always
+    networks:
+      - ims_network
     depends_on:
       - db
     environment:
@@ -38,6 +42,24 @@ services:
       - backend
     ports:
       - "3000:3000"
-  
+    networks:
+      - ims_network
+
+  nginx:
+    build: ./nginx
+    container_name: IMS-nginx
+    restart: always
+    depends_on:
+      - frontend
+      - backend
+    ports:
+      - "80:80"
+    networks:
+      - ims_network
+
+networks:
+  ims_network:
+    driver:bridge
+    
 volumes:
   db_data:
