@@ -16,8 +16,6 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-inventory_management_db}
     volumes:
       - postgres_data:/var/lib/postgresql/data
-    ports:
-      - "5432:5432"           # expose only if you need external DB access
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-inventory_user} -d ${POSTGRES_DB:-inventory_management_db}"]
       interval: 10s
@@ -42,8 +40,6 @@ services:
       SECRET_KEY: ${SECRET_KEY:-change-me-in-production}
       JWT_SECRET: ${JWT_SECRET:-change-me-in-production}
       DATABASE_URL: postgresql://${POSTGRES_USER:-inventory_user}:${POSTGRES_PASSWORD:-1234}@postgres:5432/${POSTGRES_DB:-inventory_management_db}
-    ports:
-      - "5000:5000"
     volumes:
       - ./backend:/app     # Remove this line in production for immutable image
     command: >
@@ -62,8 +58,6 @@ services:
     restart: unless-stopped
     depends_on:
       - backend
-    ports:
-      - "3000:3000"
       
 volumes:
   postgres_data:
