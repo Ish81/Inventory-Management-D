@@ -1,4 +1,3 @@
-cat > frontend.Dockerfile << 'EOF'
 FROM node:20
 WORKDIR /app
 COPY package*.json ./
