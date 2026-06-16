@@ -58,8 +58,8 @@ services:
       - ims_network
 
 networks:
-  - ims_network:
-      driver: bridge
+  ims_network:
+    driver: bridge
 
 volumes:
   db_data:
