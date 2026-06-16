@@ -1,24 +1,9 @@
-FROM node:18-alpine AS builder
-
+cat > frontend.Dockerfile << 'EOF'
+FROM node:20
 WORKDIR /app
-
-COPY frontend/package.json frontend/package-lock.json ./
-
+COPY package*.json ./
 RUN npm install
-
 COPY frontend/ .
-
+ENV CI=false
 CMD ["npm", "start"]
-
-
-FROM nginx:alpine
-
-RUN rm -rf /usr/share/nginx/html/*
-
-COPY --from=builder /app/build /usr/share/nginx/html
-
-COPY nginx.conf /etc/nginx/conf.d/default.conf
-
-EXPOSE 80
-
-CMD ["nginx", "-g", "daemon off;"]
+EOF
