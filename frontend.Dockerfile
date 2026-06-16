@@ -5,4 +5,3 @@ RUN npm install
 COPY frontend/ .
 ENV CI=false
 CMD ["npm", "start"]
-EOF
