@@ -19,7 +19,6 @@ services:
   backend:
     build: ./backend
     container_name: IMS-backend
-    restart: always
     networks:
       - ims_network
     depends_on:
