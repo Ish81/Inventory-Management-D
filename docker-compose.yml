@@ -41,7 +41,7 @@ services:
     depends_on: 
       - backend
     ports:
-      - "5173:5173"
+      - "3000:3000"
     networks:
       - ims_network
 
