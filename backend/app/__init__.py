@@ -69,7 +69,10 @@ def create_app(config_name: str = "development") -> Flask:
     # We only allow requests from http://localhost:3000 (React dev server)
     CORS(app, resources={
         r"/api/*": {
-            "origins": ["http://localhost:3000"],
+            "origins": [
+                "http://localhost:3000",
+                "http://16.16.126.137",
+                "http://16.16.126.137:3000"],
             "methods": ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
             "allow_headers": ["Content-Type", "Authorization"]
         }
