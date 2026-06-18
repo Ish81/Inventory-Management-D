@@ -2,6 +2,25 @@ version: "3.9"
 
 services:
 
+  db:
+    build: ./database
+    container_name: IMS-db
+    restart: always
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1234
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./database/init-db.sql:/docker-entrypoint-initdb.d/initdb.sql
+    networks:
+      - ims_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   backend:
     build: ./backend
     container_name: IMS-backend
@@ -16,23 +35,10 @@ services:
       TEST_DATABASE_URL: postgresql://postgres:1234@db:5432/inventory_db_test
     ports:
       - "5000:5000"
-
     depends_on:
-      - db
-
-  db:
-    build: ./database
-    container_name: IMS-db
+      db:
+        condition: service_healthy
     restart: always
-    environment:
-      POSTGRES_DB: postgres
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: 1234
-    volumes:
-      - db_data:/var/lib/postgresql/data
-      - ./database/init-db.sql:/docker-entrypoint-initdb.d/initdb.sql
-    networks:
-      - ims_network
 
   frontend:
     build: ./frontend
