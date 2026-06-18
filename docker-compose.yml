@@ -17,6 +17,9 @@ services:
     ports:
       - "5000:5000"
 
+    depends_on:
+      - db
+
   db:
     build: ./database
     container_name: IMS-db
